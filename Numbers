@@ -1,0 +1,105 @@
+#!/bin/bash
+
+function isFloat {
+if [ $# -ne 1 ]; then
+	echo false
+	return 1
+fi
+
+param=$1
+
+if $(isNumber $param); then
+	if [ -n "$(echo "$param" | grep '\.\|[Ee]')" ]; then
+		echo true
+	else
+		echo false
+	fi
+else
+	echo false
+fi
+
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+}
+
+function isInteger {
+if [ $# -ne 1 ]; then
+	echo false
+	return 1
+fi
+
+param=$1
+
+if $(isNumber $param); then
+	if [ -z "$(echo "$param" | grep '\.')" ]; then
+		echo true
+	else
+		echo false
+	fi
+else
+	echo false
+fi
+
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+}
+
+function isNumber {
+if [ $# -ne 1 ]; then
+	echo false
+	return 1
+fi
+
+param=$1
+
+res=$(echo $param | grep -x '^[-+]\?[0-9]*\.\?[0-9]*\([Ee][-+]\?[0-9]\+\)\?$') # grep -x forces a line match (POSIX compliant)
+if [ -n "$res" ]; then # test if $res return a non-zero string (number is valid)
+	sciweird=$(echo "$res" | grep '^[-+]\?\.\?[Ee]\|[Ee]$') # check if resulting number doesn't begin with [Ee]
+	if [ -z "$sciweird" ]; then
+		echo true
+	else
+		echo false
+	fi
+else
+	echo false
+fi
+
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+}
+
+function isScientificNotation {
+if [ $# -ne 1 ]; then
+	echo false
+	return 1
+fi
+
+param=$1
+
+if $(isNumber $param); then
+	if [ -n "$(echo "$param" | grep '[Ee]')" ]; then
+		echo true
+	else
+		echo false
+	fi
+else
+	echo false
+fi
+
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+}
+
+exit 0

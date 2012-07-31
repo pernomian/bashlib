@@ -1,0 +1,428 @@
+#!/bin/bash
+
+# Required Libraries
+. $HOME/bashlib/Lists
+# ---
+
+# Initialization
+y4min=1980
+# ---
+
+function currentDateTime {
+utcdate=false
+doyformat=false
+
+if [ $# -eq 0 -o $# -ge 3 ]; then
+	utcdate=false
+	doyformat=false
+else
+	for param in $*; do
+		case $param in
+			-u | --utc)
+				utcdate=true
+				;;
+			-D | --doy)
+				doyformat=true
+				;;
+		esac
+	done
+fi
+
+if $utcdate; then
+	DATE="date -u"
+else
+	DATE="date"
+fi
+
+y4=$($DATE +%Y)
+hr=$(echo "$($DATE +%H)" | sed 's/^0//')
+mi=$(echo "$($DATE +%M)" | sed 's/^0//')
+se=$(echo "$($DATE +%S)" | sed 's/^0//')
+
+if $doyformat; then
+	doy=$(echo "$($DATE +%j)" | sed 's/^0*//')
+	echo "$y4 $doy $hr $mi $se"
+else
+	mo=$(echo "$($DATE +%m)" | sed 's/^0//')
+	da=$(echo "$($DATE +%d)" | sed 's/^0//')
+	echo "$y4 $mo $da $hr $mi $se"
+fi
+
+return 0
+
+# Return codes
+# 0 - OK
+}
+
+function Date2DOY {
+if [ $# -ne 3 ]; then
+	return 1
+fi
+
+y4=$1
+if [ $y4 -lt $y4min ]; then
+	return 2
+fi
+
+mo=$(echo "$2" | sed 's/^0//')
+if [ $mo -lt 1 -o $mo -gt 12 ]; then
+	return 3
+fi
+
+da=$(echo "$3" | sed 's/^0//')
+
+nod=$(daysInMonth $y4)
+maxday=$(itemAt $mo "$nod")
+if [ $da -lt 1 -o $da -gt $maxday ]; then
+	return 4
+fi
+
+doy=0
+for m in $(seq 1 1 $(($mo - 1))); do
+	doy=$(($doy + $(itemAt $m "$nod")))
+done
+doy=$(($doy + $da))
+
+echo "$y4 $doy"
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+# 2 - Year lesser than MINIMUM
+# 3 - Wrong MONTH value
+# 4 - Wrong DAY value
+}
+
+function DayMin2Time {
+if [ $# -ne 1 ]; then
+	return 1
+fi
+
+dami=$1
+if [ $dami -lt 0 -o $dami -gt 1439 ]; then
+	return 2
+fi
+
+if [ $dami -ne 0 ]; then
+	dami=$(echo "$1" | sed 's/^0*//')
+fi
+
+hr=$(($dami / 60))
+mi=$(($dami % 60))
+
+time="$hr $mi"
+echo "$time"
+
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enogh parameters
+}
+
+function daysInMonth {
+if [ $# -ne 1 ]; then
+	return 1
+fi
+
+y4=$1
+
+dim=(31 28 31 30 31 30 31 31 30 31 30 31)
+if $(isLeapYear $y4); then
+	dim[1]=29
+fi
+
+echo "${dim[*]}"
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Excessive parameters
+}
+
+function DOY2Date {
+if [ $# -ne 2 ]; then
+	return 1
+fi
+
+y4=$1
+if [ $y4 -lt $y4min ]; then
+	return 2
+fi
+
+doy=$(echo "$2" | sed 's/^0*//')
+
+nod=$(daysInMonth $y4)
+if $(isLeapYear $y4); then
+	maxdoy=366
+else
+	maxdoy=365
+fi
+
+if [ $doy -lt 1 -o $doy -gt $maxdoy ]; then
+	return 3
+fi
+
+mo=1
+da=0
+
+r=$doy
+for cm in $(seq 1 1 12); do
+	dicm=$(itemAt $cm "$nod")
+	if [ $r -gt $dicm ]; then
+		mo=$(($mo + 1))
+		r=$(($r - $dicm))
+	else
+		da=$r
+		break
+	fi
+done
+
+echo "$y4 $mo $da"
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+# 2 - Year lesser than MINIMUM
+# 3 - Wrong DOY value
+}
+
+function incrementDate {
+if [ $# -ne 2 ]; then
+	return 2
+fi
+
+inc=$1
+date=$2
+
+c=0
+for i in $date; do
+	c=$(($c + 1))
+done
+
+if [ $c -lt 2 -o $c -gt 3 ]; then
+	return 1
+fi
+
+if [ $c -eq 2 ]; then
+	doyformat=true
+else
+	doyformat=false
+fi
+
+currentY4=$(itemAt 1 "$date")
+
+if $doyformat; then
+	currentDOY=$(echo "$(itemAt 2 "$date")" | sed 's/^0*//')
+else
+	currentMO=$(echo "$(itemAt 2 "$date")" | sed 's/^0//')
+	currentDA=$(echo "$(itemAt 3 "$date")" | sed 's/^0//')
+	
+	currentDOY=$(itemAt 2 "$(Date2DOY $currentY4 $currentMO $currentDA)")
+fi
+
+if $(isLeapYear $currentY4); then
+	currentDOYmax=366
+else
+	currentDOYmax=365
+fi
+
+newDOY=$(($currentDOY + $inc))
+
+
+if [ $newDOY -lt 1 ]; then
+	newY4=$(($currentY4 - 1))
+	
+	if $(isLeapYear $newY4); then
+		newDOY=$((366 + $newDOY))
+	else
+		newDOY=$((365 + $newDOY))
+	fi
+elif [ $newDOY -gt $currentDOYmax ]; then
+	newY4=$(($currentY4 + 1))
+	newDOY=$(($newDOY - $currentDOYmax))
+else
+	newY4=$currentY4
+fi
+
+if [ $c -eq 2 ]; then
+	echo "$newY4 $newDOY"
+else
+	newDate=$(DOY2Date $newY4 $newDOY)
+	newMO=$(itemAt 2 "$newDate")
+	newDA=$(itemAt 3 "$newDate")
+	echo "$newY4 $newMO $newDA"
+fi
+
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Unexpected list
+# 2 - Not enough parameters
+}
+
+function incrementTime {
+if [ $# -ne 2 ]; then
+	return 3
+fi
+
+inc=$1
+
+incmin=-1439
+incmax=1439
+if [ $inc -lt $incmin -o $inc -gt $incmax ]; then
+	return 1
+fi
+
+time=$2
+
+c=0
+for i in $time; do
+	c=$(($c + 1))
+done
+
+if [ $c -ne 2 ]; then
+	return 2
+fi
+
+currentHour=$(itemAt 1 "$time")
+currentMin=$(itemAt 2 "$time")
+
+currentDayMin=$(Time2DayMin $currentHour $currentMin)
+
+newDayMin=$(($currentDayMin + $inc))
+
+if [ $newDayMin -lt 0 ]; then
+	newDayMin=$((1440 + $newDayMin))
+fi
+
+if [ $newDayMin -gt 1439 ]; then
+	newDayMin=$(($newDayMin - 1440))
+fi
+
+newTime=$(DayMin2Time $newDayMin)
+newHour=$(itemAt 1 "$newTime")
+newMin=$(itemAt 2 "$newTime")
+
+echo "$newHour $newMin"
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Increment out of range
+# 2 - Unexpected list
+# 3 - Not enough parameters
+}
+
+function isLeapYear {
+if [ $# -ne 1 ]; then
+	return 1
+fi
+
+y4=$1
+if [ $y4 -lt $y4min ]; then
+	return 2
+fi
+
+if [ $(($y4 % 4)) -eq 0 ]; then
+	echo true
+else
+	echo false
+fi
+
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+# 2 - Year lesser than MININUM
+}
+
+function monthOfDOY() {
+if [ $# -ne 2 ]; then
+	return 1
+fi
+
+y4=$1
+doy=$(echo "$2" | sed 's/^0*//')
+
+nod=$(daysInMonth $y4)
+
+m=1
+r=$doy
+
+for i in $nod; do
+	if [ $r -gt $i ]; then
+		m=$(($m + 1))
+		r=$(($r - $i))
+	else
+		break
+	fi
+done
+
+echo $m
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+}
+
+function shortYear {
+if [ $# -ne 1 ]; then
+	return 1
+fi
+
+y4=$1
+if [ $y4 -lt $y4min ]; then
+	return 2
+fi
+
+y2=$(echo $y4 | sed 's/^..//')
+echo $y2
+
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+# 2 - Year lesser than MININUM
+}
+
+function Time2DayMin {
+if [ $# -ne 2 ]; then
+	return 1
+fi
+
+hr=$1
+if [ $hr -lt 0 -o $hr -gt 23 ]; then
+	return 2
+fi
+
+if [ $hr -ne 0 ]; then
+	hr=$(echo "$hr" | sed 's/^0//')
+fi
+
+mi=$2
+if [ $mi -lt 0 -o $mi -gt 59 ]; then
+	return 3
+fi
+
+if [ $mi -ne 0 ]; then
+	mi=$(echo "$mi" | sed 's/^0//')
+fi
+
+dami=$(($(($hr * 60)) + $mi))
+
+echo $dami
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+# 2 - Wrong hour
+# 3 - Wrong minute
+}
