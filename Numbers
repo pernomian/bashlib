@@ -9,8 +9,12 @@ fi
 param=$1
 
 if $(isNumber $param); then
-	if [ -n "$(echo "$param" | grep '\.\|[Ee]')" ]; then
-		echo true
+	if [ -n "$(echo "$param" | grep '\.')" ]; then
+		if [ -z "$(echo "$param" | grep '[Ee]')" ]; then
+			echo true
+		else
+			echo false
+		fi
 	else
 		echo false
 	fi
@@ -35,7 +39,11 @@ param=$1
 
 if $(isNumber $param); then
 	if [ -z "$(echo "$param" | grep '\.')" ]; then
-		echo true
+		if [ -z "$(echo "$param" | grep '[Ee]')" ]; then
+			echo true
+		else
+			echo false
+		fi
 	else
 		echo false
 	fi
@@ -112,10 +120,6 @@ if ! $(isFloat $param); then
 	return 2
 fi
 
-if $(isScientificNotation $param); then
-	return 3
-fi
-
 # Chosen method: split the number at the floating point:
 # 1. The integer part is normalized by using "normalizeInteger"
 # 2. The float part is normalized by removing the trailing zeros.
@@ -123,6 +127,19 @@ fi
 
 # Splitting
 integer=$(echo "$param" | cut -d "." -f 1)
+# If the integer part is empty, a null argument is passed to "normalizeInteger".
+# To avoid this, this check defines integer=0
+if [ -z "$integer" ]; then
+	integer=0
+fi
+# But when redefining integer=0, the negative/positive information get lost,
+# so this additional check memorizes when an integer is negative by holding the "-" whether necessary.
+if [ -n "$(echo "$integer" | grep "^-")" ]; then
+	sig="-"
+else
+	sig=""
+fi
+
 float=$(echo "$param" | cut -d "." -f 2)
 
 # Normalizing integer part
@@ -136,7 +153,14 @@ if [ -z "$fnorm" ]; then
 	fnorm=0
 fi
 
-res="$inorm.$fnorm"
+# Now that the "-" is memorized according to the integer part, it needs to be checked against the float part
+# If the normalized float part is 0, even if the integer part is just a "-" signal, the number is zero (-0.0 = 0.0)
+# The next check takes cares ot that.
+if [ $fnorm -eq 0 ]; then
+	sig=""
+fi
+
+res="$sig""$inorm"".""$fnorm"
 
 echo $res
 return 0
@@ -145,7 +169,6 @@ return 0
 # 0 - OK
 # 1 - Not enough parameters
 # 2 - Input is not float
-# 3 - Scientific notation numbers is not allowed, although, they are float! 
 }
 
 function normalizeInteger() {
@@ -188,5 +211,84 @@ return 0
 # 0 - OK
 # 1 - Not enough parameters
 # 2 - Input is not integer
-} 
+}
+
+function normalizeNumber() {
+if [ $# -ne 1 ]; then
+	return 1
+fi
+
+param=$1
+if ! $(isNumber $param); then
+	return 2
+fi
+
+if $(isInteger $param); then
+	res=$(normalizeInteger $param)
+	echo $res
+	return 0
+fi
+
+if $(isFloat $param); then
+	res=$(normalizeFloat $param)
+	echo $res
+	return 0
+fi
+
+if $(isScientificNotation $param); then
+	res=$(normalizeScientificNotation $param)
+	echo $res
+	return 0
+fi
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+# 2 - Input is not a number
+}
+
+function normalizeScientificNotation() {
+if [ $# -ne 1 ]; then
+	return 1
+fi
+
+param=$1
+if ! $(isScientificNotation $param); then
+	return 2
+fi
+
+# Chosen method: split the number at the "exp" (E/e) symbol:
+# 1. The left part is normalized by using "normalizeFloat" or "normalizeInteger" 
+# 2. The right part is normalized by using "normalizeInteger".
+
+lower=$(echo "$param" | grep "e")
+if [ -n "$lower" ]; then
+	exp="e"
+fi
+
+upper=$(echo "$param" | grep "E")
+if [ -n "$upper" ]; then
+	exp="E"
+fi
+
+left=$(echo "$param" | cut -d "$exp" -f 1)
+if $(isInteger $left); then
+	lnorm=$(normalizeInteger $left)
+fi
+if $(isFloat $left); then
+	lnorm=$(normalizeFloat $left)
+fi
+
+right=$(echo "$param" | cut -d "$exp" -f 2)
+rnorm=$(normalizeInteger $right)
+
+res="$lnorm""$exp""$rnorm"
+echo $res
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+# 2 - Input is not scientific notation
+}
 
