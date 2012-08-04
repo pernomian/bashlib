@@ -5,7 +5,7 @@
 # ---
 
 # Initialization
-y4min=1980
+y4min=1970
 # ---
 
 function currentDateTime {
