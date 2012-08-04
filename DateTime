@@ -60,24 +60,15 @@ if [ $# -ne 3 ]; then
 fi
 
 y4=$1
-if [ $y4 -lt $y4min ]; then
+mo=$(echo "$2" | sed 's/^0//')
+da=$(echo "$3" | sed 's/^0//')
+
+if ! $(isValidDate "$y4 $mo $da"); then
 	return 2
 fi
 
-mo=$(echo "$2" | sed 's/^0//')
-if [ $mo -lt 1 -o $mo -gt 12 ]; then
-	return 3
-fi
-
-da=$(echo "$3" | sed 's/^0//')
-
-nod=$(daysInMonth $y4)
-maxday=$(itemAt $mo "$nod")
-if [ $da -lt 1 -o $da -gt $maxday ]; then
-	return 4
-fi
-
 doy=0
+nod=$(daysInMonth $y4)
 for m in $(seq 1 1 $(($mo - 1))); do
 	doy=$(($doy + $(itemAt $m "$nod")))
 done
@@ -89,9 +80,7 @@ return 0
 # Return codes
 # 0 - OK
 # 1 - Not enough parameters
-# 2 - Year lesser than MINIMUM
-# 3 - Wrong MONTH value
-# 4 - Wrong DAY value
+# 2 - Wrong date
 }
 
 function DayMin2Time {
@@ -147,27 +136,17 @@ if [ $# -ne 2 ]; then
 fi
 
 y4=$1
-if [ $y4 -lt $y4min ]; then
-	return 2
-fi
-
 doy=$(echo "$2" | sed 's/^0*//')
 
-nod=$(daysInMonth $y4)
-if $(isLeapYear $y4); then
-	maxdoy=366
-else
-	maxdoy=365
-fi
-
-if [ $doy -lt 1 -o $doy -gt $maxdoy ]; then
-	return 3
+if ! $(isValidDate "$y4 $doy"); then
+	return 2
 fi
 
 mo=1
 da=0
 
 r=$doy
+nod=$(daysInMonth $y4)
 for cm in $(seq 1 1 12); do
 	dicm=$(itemAt $cm "$nod")
 	if [ $r -gt $dicm ]; then
@@ -185,17 +164,16 @@ return 0
 # Return codes
 # 0 - OK
 # 1 - Not enough parameters
-# 2 - Year lesser than MINIMUM
-# 3 - Wrong DOY value
+# 2 - Wrong date
 }
 
 function incrementDate {
 if [ $# -ne 2 ]; then
-	return 2
+	return 1
 fi
 
 inc=$1
-date=$2
+date="$2"
 
 c=0
 for i in $date; do
@@ -203,7 +181,11 @@ for i in $date; do
 done
 
 if [ $c -lt 2 -o $c -gt 3 ]; then
-	return 1
+	return 2
+fi
+
+if ! $(isValidDate "$date"); then
+	return 2
 fi
 
 if [ $c -eq 2 ]; then
@@ -260,13 +242,13 @@ return 0
 
 # Return codes
 # 0 - OK
-# 1 - Unexpected list
-# 2 - Not enough parameters
+# 1 - Not enough parameters
+# 2 - Wrong date
 }
 
 function incrementTime {
 if [ $# -ne 2 ]; then
-	return 3
+	return 1
 fi
 
 inc=$1
@@ -274,10 +256,10 @@ inc=$1
 incmin=-1439
 incmax=1439
 if [ $inc -lt $incmin -o $inc -gt $incmax ]; then
-	return 1
+	return 2
 fi
 
-time=$2
+time="$2"
 
 c=0
 for i in $time; do
@@ -285,7 +267,11 @@ for i in $time; do
 done
 
 if [ $c -ne 2 ]; then
-	return 2
+	return 3
+fi
+
+if ! $(isValidTime "$time"); then
+	return 3
 fi
 
 currentHour=$(itemAt 1 "$time")
@@ -312,12 +298,13 @@ return 0
 
 # Return codes
 # 0 - OK
-# 1 - Increment out of range
-# 2 - Unexpected list
-# 3 - Not enough parameters
+# 1 - Not enough parameters
+# 2 - Increment out of range
+# 3 - Wrong time
+
 }
 
-function isLeapYear {
+function isLeapYear() {
 if [ $# -ne 1 ]; then
 	return 1
 fi
@@ -341,6 +328,118 @@ return 0
 # 2 - Year lesser than MININUM
 }
 
+function isValidDate() {
+if [ $# -ne 1 ]; then
+	return 1
+fi
+
+param="$1"
+
+c=0
+for i in $param; do
+	c=$(($c + 1))
+done
+
+if [ $c -lt 2 -o $c -gt 3 ]; then
+	echo false
+	return 2
+elif [ $c -eq 2 ]; then
+	y4=$(itemAt 1 "$param")
+	if [ $y4 -lt $y4min ]; then
+		echo false
+		return 2
+	fi
+	
+	doy=$(echo "$(itemAt 2 "$param")" | sed 's/^0*//')
+	if $(isLeapYear $y4); then
+		doymax=366
+	else
+		doymax=365
+	fi
+	if [ $doy -lt 1 -o $doy -gt $doymax ]; then
+		echo false
+		return 2
+	fi
+	
+	echo true
+elif [ $c -eq 3 ]; then
+	y4=$(itemAt 1 "$param")
+	if [ $y4 -lt $y4min ]; then
+		echo false
+		return 2
+	fi
+	
+	mo=$(echo "$(itemAt 2 "$param")" | sed 's/^0*//')
+	if [ $mo -lt 1 -o $mo -gt 12 ]; then
+		echo false
+		return 2
+	fi
+	
+	da=$(echo "$(itemAt 3 "$param")" | sed 's/^0*//')
+	nod=$(daysInMonth $y4)
+	if [ $da -lt 1 -o $da -gt $(itemAt $mo "$nod") ]; then
+		echo false
+		return 2
+	fi
+	
+	echo true
+else
+	echo false
+	return 2
+fi
+
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+# 2 - Not a valid date
+}
+
+function isValidTime() {
+if [ $# -ne 1 ]; then
+	return 1
+fi
+
+param="$1"
+
+c=0
+for i in $param; do
+	c=$(($c + 1))
+done
+
+if [ $c -ne 2 ]; then
+	echo false
+	return 2
+fi
+
+hr=$(itemAt 1 "$param")
+if [ "$hr" != "0" ]; then
+	hr=$(echo "$(itemAt 1 "$param")" | sed 's/^0//')
+fi
+if [ $hr -lt 0 -o $hr -gt 23 ]; then
+	echo false
+	return 2
+fi
+
+mi=$(itemAt 2 "$param")
+if [ "$mi" != "0" ]; then
+	mi=$(echo "$(itemAt 2 "$param")" | sed 's/^0//')
+fi
+if [ $mi -lt 0 -o $mi -gt 59 ]; then
+	echo false
+	return 2
+fi
+
+echo true
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+# 2 - Not a valid time
+}
+
 function monthOfDOY() {
 if [ $# -ne 2 ]; then
 	return 1
@@ -348,6 +447,10 @@ fi
 
 y4=$1
 doy=$(echo "$2" | sed 's/^0*//')
+
+if ! $(isValidDate "$y4 $doy"); then
+	return 2
+fi
 
 nod=$(daysInMonth $y4)
 
@@ -369,6 +472,7 @@ return 0
 # Return codes
 # 0 - OK
 # 1 - Not enough parameters
+# 2 - Wrong date
 }
 
 function shortYear {
@@ -398,21 +502,17 @@ if [ $# -ne 2 ]; then
 fi
 
 hr=$1
-if [ $hr -lt 0 -o $hr -gt 23 ]; then
-	return 2
-fi
-
-if [ $hr -ne 0 ]; then
+if [ "$hr" != "0" ]; then
 	hr=$(echo "$hr" | sed 's/^0//')
 fi
 
 mi=$2
-if [ $mi -lt 0 -o $mi -gt 59 ]; then
-	return 3
+if [ "$mi" != "0" ]; then
+	mi=$(echo "$mi" | sed 's/^0//')
 fi
 
-if [ $mi -ne 0 ]; then
-	mi=$(echo "$mi" | sed 's/^0//')
+if ! $(isValidTime "$hr $mi"); then
+	return 2
 fi
 
 dami=$(($(($hr * 60)) + $mi))
@@ -423,6 +523,5 @@ return 0
 # Return codes
 # 0 - OK
 # 1 - Not enough parameters
-# 2 - Wrong hour
-# 3 - Wrong minute
+# 2 - Wrong time
 }
