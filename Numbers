@@ -147,7 +147,7 @@ inorm=$(normalizeInteger $integer)
 
 # Normalizing float part
 fnorm=$(echo "$float" | sed 's/0*$//')
-# If the number is just a sequency of zeros , the last sed will remove all of them.
+# If the number is just a sequence of zeros , the last sed will remove all of them.
 # If the float part is also empty, this check solves that by setting fnorm=0
 if [ -z "$fnorm" ]; then 
 	fnorm=0
