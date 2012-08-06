@@ -144,6 +144,13 @@ float=$(echo "$param" | cut -d "." -f 2)
 
 # Normalizing integer part
 inorm=$(normalizeInteger $integer)
+# In the previous signal check, if the number is negative, sig variable holds "-".
+# But if inorm already returns a negative number, the "-" in sig is not necessary and needs to be erased.
+# If the signal is not erased from sig, the resulting float will have two "-".
+# To avoid this, the next check is performed.
+if [ -n "$(echo "$inorm" | grep "^-")" ]; then
+	sig=""
+fi
 
 # Normalizing float part
 fnorm=$(echo "$float" | sed 's/0*$//')
