@@ -1,7 +1,6 @@
 #!/bin/bash
 
-. $HOME/bashlib/DateTime
-. $HOME/bashlib/Lists
+. DateTime.bash
 
 myDate=$(currentDateTime)
 echo $myDate
@@ -24,8 +23,8 @@ echo $nod
 refdate="2012 8 6"
 yesterday=$(incrementDate -1 "$refdate") # Note the quotes to distinguish the list.
 echo $yesterday
-oneweekago=$(incrementDate -7 "2012 8 6")
-echo $oneweekago
+onceuponatime=$(incrementDate -10000 "2012 9 21")
+echo $onceuponatime
 tomorrow=$(incrementDate 1 "2012 8 6")
 echo $tomorrow
 oneweekafter=$(incrementDate 7 "2012 8 6")
@@ -69,12 +68,34 @@ if $(isValidTime "$time2"); then
 else
 	echo "\"$time2\" é inválido!"
 fi
+time3="0 30 59"
+if $(isValidTime "$time3"); then
+	echo "\"$time3\" é válido."
+else
+	echo "\"$time3\" é inválido!"
+fi
+time4="0 30 60"
+if $(isValidTime "$time4"); then
+	echo "\"$time4\" é válido."
+else
+	echo "\"$time4\" é inválido!"
+fi
 
 month=$(monthOfDOY 2012 219)
 echo "O mês do dia do ano 219 de 2012 é $month."
 
 y2=$(shortYear 2012)
 echo "O ano curto de 2012 é $y2."
+
+JDN=$(Date2JDN 2012 9 20)
+echo "O JDN de 20/9/2012 é $JDN"
+
+Date=$(JDN2Date 2456191)
+echo "A data de JDN 2456191 é $Date"
+
+JD=$(DateTime2JD 2012 9 20 16 30 0)
+echo "O JD de 20/9/2012 16:30:00 é $JD"
+
 
 exit 0
 

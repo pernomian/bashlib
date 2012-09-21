@@ -9,7 +9,7 @@ Bash Shell Script Library
 * Language: BASH Shell Script
 * Dependencies: bash (>=3.2)
 
-## Recomendations
+## Recommendations
 
 After downloading bashlib, rename and copy the entire folder into your home directory.
 If you don't do this you will need to change the library path in all scripts headers inside the "Required Libraries" section.
