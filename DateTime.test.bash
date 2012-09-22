@@ -2,100 +2,129 @@
 
 . DateTime.bash
 
-myDate=$(currentDateTime)
-echo $myDate
+now=$(Now)
+echo "Now is $now"
 
-DOY=$(Date2DOY 2012 8 6)
-echo $DOY
+Date="2012 8 6"
+DOY=$(Date2DOY "$Date")
+echo "DOY of $Date is $DOY"
 
-Date=$(DOY2Date 2012 219)
-echo $Date
+Year=2012
+DOY=219
+Date=$(DOY2Date $Year $DOY)
+echo "$Year $DOY is $Date"
 
-Time=$(DayMin2Time 720)
-echo $Time
+Minutes=720
+Time=$(Minutes2Time $Minutes)
+echo "Time of $Minutes is $Time"
 
-DayMin=$(Time2DayMin 12 0)
-echo $DayMin
+Time="12 0 5"
+Minutes=$(Time2Minutes "$Time")
+echo "Minute of $Time is $Minutes"
 
-nod=$(daysInMonth 2012)
-echo $nod
+Year=2012
+nod=$(daysInMonth $Year)
+echo "The number of days in month for $Year is $nod"
 
-refdate="2012 8 6"
-yesterday=$(incrementDate -1 "$refdate") # Note the quotes to distinguish the list.
-echo $yesterday
-onceuponatime=$(incrementDate -10000 "2012 9 21")
-echo $onceuponatime
-tomorrow=$(incrementDate 1 "2012 8 6")
-echo $tomorrow
-oneweekafter=$(incrementDate 7 "2012 8 6")
-echo $oneweekafter
+Date="2012 8 6"
+previousDay=$(incrementDay -1 "$Date")
+echo "The previous day of $Date is $previousDay"
+previousWeek=$(incrementDay -7 "$Date")
+echo "The previous week of $Date is $previousWeek"
+nextDay=$(incrementDay 1 "$Date")
+echo "The next day of $Date is $nextDay"
+nextWeek=$(incrementDay 7 "$Date")
+echo "The next week of $Date is $nextWeek"
 
-before10=$(incrementTime -10 "12 50")
-echo $before10
-after10=$(incrementTime 10 "12 50")
-echo $after10
+Time="12 50 30"
+previous10=$(incrementMinute -10 "$Time")
+echo "Time is $Time. 10 minutes ago was $previous10"
+next10=$(incrementMinute 10 "$Time")
+echo "Time is $Time. Next 10 minutes will be $next10"
 
-for y4 in $(seq 2000 1 2012); do
-	if $(isLeapYear $y4); then
-		echo "$y4 é bissexto"
+for Year in $(seq 2008 1 2012); do
+	if $(isLeapYear $Year); then
+		echo "$Year is Leap Year"
 	else
-		echo "$y4 é normal"
+		echo "$Year is Normal Year"
 	fi 
 done
 
-date1="2012 8 6"
-if $(isValidDate "$date1"); then
-	echo "\"$date1\" é válida."
+Date1="2012 8 6"
+if $(isDate "$Date1"); then
+	echo "$Date1 is Date"
 else
-	echo "\"$date1\" é inválida!"
+	echo "$Date1 is not Date!"
 fi
-date2="2011 2 29"
-if $(isValidDate "$date2"); then
-	echo "\"$date2\" é válida."
+Date2="2011 2 29"
+if $(isDate "$Date2"); then
+	echo "$Date2 is Date"
 else
-	echo "\"$date2\" é inválida!"
-fi
-
-time1="13 5"
-if $(isValidTime "$time1"); then
-	echo "\"$time1\" é válido."
-else
-	echo "\"$time1\" é inválido!"
-fi
-time2="0 60"
-if $(isValidTime "$time2"); then
-	echo "\"$time2\" é válido."
-else
-	echo "\"$time2\" é inválido!"
-fi
-time3="0 30 59"
-if $(isValidTime "$time3"); then
-	echo "\"$time3\" é válido."
-else
-	echo "\"$time3\" é inválido!"
-fi
-time4="0 30 60"
-if $(isValidTime "$time4"); then
-	echo "\"$time4\" é válido."
-else
-	echo "\"$time4\" é inválido!"
+	echo "$Date2 is not Date!"
 fi
 
-month=$(monthOfDOY 2012 219)
-echo "O mês do dia do ano 219 de 2012 é $month."
+Time1="0 30 59"
+if $(isTime "$Time1"); then
+	echo "$Time1 is Time"
+else
+	echo "$Time1 is not Time!"
+fi
+Time2="0 30 60"
+if $(isTime "$Time2"); then
+	echo "$Time2 is Time"
+else
+	echo "$Time2 is not Time!"
+fi
+
+DateTime1="2011 2 28 0 35 20"
+if $(isDateTime "$DateTime1"); then
+	echo "$DateTime1 is DateTime"
+else
+	echo "$DateTime1 is not DateTime!"
+fi
+DateTime2="2011 2 29 0 35 20"
+if $(isDateTime "$DateTime2"); then
+	echo "$DateTime2 is DateTime"
+else
+	echo "$DateTime2 is not DateTime!"
+fi
+DateTime3="2012 2 29 0 30 60"
+if $(isDateTime "$DateTime3"); then
+	echo "$DateTime3 is DateTime"
+else
+	echo "$DateTime3 is not DateTime!"
+fi
+
+Month=$(monthOfDOY 2012 219)
+echo "Month of DOY 219 of 2012 is $Month"
 
 y2=$(shortYear 2012)
-echo "O ano curto de 2012 é $y2."
+echo "Short Year of 2012 is $y2"
 
-JDN=$(Date2JDN 2012 9 20)
-echo "O JDN de 20/9/2012 é $JDN"
+Date="2012 9 20"
+JDN=$(Date2JDN "$Date")
+echo "JDN of $Date is $JDN"
 
-Date=$(JDN2Date 2456191)
-echo "A data de JDN 2456191 é $Date"
+JDN=2456191
+Date=$(JDN2Date $JDN)
+echo "Date of JD#$JDN is $Date"
 
-JD=$(DateTime2JD 2012 9 20 16 30 0)
-echo "O JD de 20/9/2012 16:30:00 é $JD"
+DateTime="2012 9 20 11 59 59"
+JD=$(DateTime2JD "$DateTime")
+echo "JD of $DateTime is $JD"
 
+JD=2456190.999988426
+DateTime=$(JD2DateTime $JD)
+echo "DateTime of $JD is $DateTime"
+
+Date1="2011 1 1"
+Date2="2012 12 31"
+dJDN=$(deltaDay "$Date1" "$Date2")
+echo "There are $dJDN days between $Date1 and $Date2"
+
+DateTime1="2012 1 1 0 0 0"
+DateTime2="2013 12 31 0 0 0"
+dSec=$(deltaSecond "$DateTime1" "$DateTime2")
+echo "There are $dSec seconds between $DateTime1 and $DateTime2"
 
 exit 0
-

@@ -9,64 +9,19 @@
 MinimumYear=1970
 # ---
 
-function currentDateTime {
-utcdate=false
-doyformat=false
-
-if [ $# -eq 0 -o $# -ge 3 ]; then
-	utcdate=false
-	doyformat=false
-else
-	for param in $*; do
-		case $param in
-			-u | --utc)
-				utcdate=true
-				;;
-			-D | --doy)
-				doyformat=true
-				;;
-		esac
-	done
-fi
-
-if $utcdate; then
-	DATE="date -u"
-else
-	DATE="date"
-fi
-
-y4=$($DATE +%Y)
-hr=$(echo "$($DATE +%H)" | sed 's/^0//')
-mi=$(echo "$($DATE +%M)" | sed 's/^0//')
-se=$(echo "$($DATE +%S)" | sed 's/^0//')
-
-if $doyformat; then
-	doy=$(echo "$($DATE +%j)" | sed 's/^0*//')
-	echo "$y4 $doy $hr $mi $se"
-else
-	mo=$(echo "$($DATE +%m)" | sed 's/^0//')
-	da=$(echo "$($DATE +%d)" | sed 's/^0//')
-	echo "$y4 $mo $da $hr $mi $se"
-fi
-
-return 0
-
-# Return codes
-# 0 - OK
-}
-
-function Date2DOY {
-if [ $# -ne 3 ]; then
+function Date2DOY() {
+if [ $# -ne 1 ]; then
 	return 1
 fi
 
-y4=$1
-mo=$(echo "$2" | sed 's/^0//')
-da=$(echo "$3" | sed 's/^0//')
-
-if ! $(isValidDate "$y4 $mo $da"); then
+Date="$1"
+if ! $(isDate "$Date"); then
 	return 2
 fi
+
+y4=$(itemAt 1 "$Date")
+mo=$(itemAt 2 "$Date")
+da=$(itemAt 3 "$Date")
 
 doy=0
 nod=$(daysInMonth $y4)
@@ -75,7 +30,8 @@ for m in $(seq 1 1 $(($mo - 1))); do
 done
 doy=$(($doy + $da))
 
-echo "$y4 $doy"
+echo "$doy"
+
 return 0
 
 # Return codes
@@ -85,16 +41,18 @@ return 0
 }
 
 function Date2JDN() {
-if [ $# -ne 3 ]; then
+if [ $# -ne 1 ]; then
 	return 1
 fi
-y4=$1
-mo=$(echo "$2" | sed 's/^0//')
-da=$(echo "$3" | sed 's/^0//')
 
-if ! $(isValidDate "$y4 $mo $da"); then
+Date="$1"
+if ! $(isDate "$Date"); then
 	return 2
 fi
+
+y4=$(itemAt 1 "$Date")
+mo=$(itemAt 2 "$Date")
+da=$(itemAt 3 "$Date")
 
 a=$(echo "scale=0; (14 - $mo) / 12" | bc)
 y=$(echo "$y4 + 4800 -$a" | bc)
@@ -102,7 +60,8 @@ m=$(echo "$mo + 12 * $a - 3" | bc)
 JDN=$(echo "scale=0; $da + (153 * $m + 2) / 5 + 365 * $y + $y / 4 \
     - $y / 100 + $y / 400 - 32045" | bc)
 
-echo $JDN
+echo "$JDN"
+
 return 0
 
 # Return codes
@@ -112,31 +71,28 @@ return 0
 }
 
 function DateTime2JD() {
-if [ $# -ne 6 ]; then
+if [ $# -ne 1 ]; then
 	return 1
 fi
 
-y4=$1
-mo=$2
-da=$3
-hr=$4
-mi=$5
-se=$6
-
-if ! $(isValidDate "$y4 $mo $da"); then
+DateTime=$1
+if ! $(isDateTime "$DateTime"); then
 	return 2
 fi
 
-if ! $(isValidTime "$hr $mi $se"); then
-	return 2
-fi
+y4=$(itemAt 1 "$DateTime")
+mo=$(itemAt 2 "$DateTime")
+da=$(itemAt 3 "$DateTime")
+JDN=$(Date2JDN "$y4 $mo $da")
 
-JDN=$(Date2JDN $y4 $mo $da)
-
-JD=$(echo "scale=6; $JDN + ($hr - 12) / 24.0 + $mi / 1440.0 \
+hr=$(itemAt 4 "$DateTime")
+mi=$(itemAt 5 "$DateTime")
+se=$(itemAt 6 "$DateTime")
+JD=$(echo "scale=10; $JDN + ($hr - 12) / 24.0 + $mi / 1440.0 \
    + $se / 86400.0" | bc)
 
-echo $JD
+echo $(echo "$JD" | awk '{printf("%.9f", $0)}')
+
 return 0
 
 # Return codes
@@ -145,40 +101,7 @@ return 0
 # 2 - Invalid date and/or time
 }
 
-function DayMin2Time {
-if [ $# -ne 1 ]; then
-	return 1
-fi
-
-dami=$1
-if ! $(isInteger $dami); then
-	return 2
-fi
-
-if [ $dami != "0" ]; then
-	dami=$(echo "$1" | sed 's/^0*//')
-fi
-
-if [ $dami -lt 0 -o $dami -gt 1439 ]; then
-	return 3
-fi
-
-hr=$(($dami / 60))
-mi=$(($dami % 60))
-
-time="$hr $mi"
-echo "$time"
-
-return 0
-
-# Return codes
-# 0 - OK
-# 1 - Not enough parameters
-# 2 - DayMin is not integer
-# 3 - DayMin is out of range
-}
-
-function daysInMonth {
+function daysInMonth() {
 if [ $# -ne 1 ]; then
 	return 1
 fi
@@ -187,7 +110,6 @@ y4=$1
 if ! $(isInteger $y4); then
 	return 2
 fi
-
 if [ $y4 -lt $MinimumYear ]; then
 	return 3
 fi
@@ -198,6 +120,7 @@ if $(isLeapYear $y4); then
 fi
 
 echo "${dim[*]}"
+
 return 0
 
 # Return codes
@@ -207,15 +130,81 @@ return 0
 # 3 - Year is LESSER THAN the MINIMUM
 }
 
-function DOY2Date {
+function deltaDay() {
+if [ $# -ne 2 ]; then
+	return 1
+fi
+
+Date1="$1"
+if ! $(isDate "$Date1"); then
+	return 2
+fi
+
+Date2="$2"
+if ! $(isDate "$Date2"); then
+	return 2
+fi
+
+JDN1=$(Date2JDN "$Date1")
+JDN2=$(Date2JDN "$Date2")
+deltaJDN=$(($JDN2 - $JDN1))
+
+echo "$deltaJDN"
+
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+# 2 - Invalid date(s)
+}
+
+function deltaSecond() {
+if [ $# -ne 2 ]; then
+	return 1
+fi
+
+DateTime1="$1"
+if ! $(isDateTime "$DateTime1"); then
+	return 2
+fi
+
+DateTime2="$2"
+if ! $(isDateTime "$DateTime2"); then
+	return 2
+fi
+
+JD1=$(DateTime2JD "$DateTime1")
+JD2=$(DateTime2JD "$DateTime2")
+deltaSec=$(echo "($JD2 - $JD1) * 86400.0" | bc)
+
+echo $(echo "$deltaSec" | awk '{printf("%.0f", $0)}')
+
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+# 2 - Invalid Date/Time
+}
+
+function DOY2Date() {
 if [ $# -ne 2 ]; then
 	return 1
 fi
 
 y4=$1
-doy=$(echo "$2" | sed 's/^0*//')
+if [ $y4 -lt $MinimumYear ]; then
+	return 2
+fi
 
-if ! $(isValidDate "$y4 $doy"); then
+doy=$(echo "$2" | sed 's/^0*//')
+if $(isLeapYear $y4); then
+	MaximumDOY=366
+else
+	MaximumDOY=365
+fi
+if [ $doy -lt 1 -o $doy -gt $MaximumDOY ]; then
 	return 2
 fi
 
@@ -236,6 +225,7 @@ for cm in $(seq 1 1 12); do
 done
 
 echo "$y4 $mo $da"
+
 return 0
 
 # Return codes
@@ -244,7 +234,7 @@ return 0
 # 2 - Invalid date
 }
 
-function incrementDate {
+function incrementDay() {
 if [ $# -ne 2 ]; then
 	return 1
 fi
@@ -253,51 +243,22 @@ inc=$1
 if ! $(isInteger $inc); then
 	return 2
 fi
-
 if [ $inc -lt -32768 -o $inc -gt 32768 ]; then
 	return 3
 fi
 
-date="$2"
-if ! $(isValidDate "$date"); then
+Date="$2"
+if ! $(isDate "$Date"); then
 	return 4
 fi
 
-c=$(sizeOfList "$date")
-
-if [ $c -eq 2 ]; then
-	doyformat=true
-else
-	doyformat=false
-fi
-
-cy4=$(itemAt 1 "$date")
-
-if $doyformat; then
-	cdoy=$(echo "$(itemAt 2 "$date")" | sed 's/^0*//')
-	
-	cmo=$(itemAt 2 "$(DOY2Date $cy4 $cdoy)")
-	cda=$(itemAt 3 "$(DOY2Date $cy4 $cdoy)")
-else
-	cmo=$(echo "$(itemAt 2 "$date")" | sed 's/^0//')
-	cda=$(echo "$(itemAt 3 "$date")" | sed 's/^0//')
-fi
-
-cJDN=$(Date2JDN $cy4 $cmo $cda)
+cJDN=$(Date2JDN "$Date")
 
 nJDN=$(($cJDN + $inc))
 
 nDate=$(JDN2Date $nJDN)
-ny4=$(itemAt 1 "$nDate")
-nmo=$(itemAt 2 "$nDate")
-nda=$(itemAt 3 "$nDate")
 
-if $doyformat; then
-	ndoy=$(itemAt 2 "$(Date2DOY $ny4 $nmo $nda)")
-	echo "$ny4 $ndoy"
-else
-	echo "$ny4 $nmo $nda"
-fi
+echo "$nDate"
 
 return 0
 
@@ -309,7 +270,7 @@ return 0
 # 4 - Invalid date
 }
 
-function incrementTime {
+function incrementMinute() {
 if [ $# -ne 2 ]; then
 	return 1
 fi
@@ -318,38 +279,33 @@ inc=$1
 if ! $(isInteger $inc); then
 	return 2
 fi
-
-incmin=-1439
-incmax=1439
-if [ $inc -lt $incmin -o $inc -gt $incmax ]; then
+if [ $inc -lt -1439 -o $inc -gt 1439 ]; then
 	return 3
 fi
 
-time="$2"
-if ! $(isValidTime "$time"); then
+cTime="$2"
+if ! $(isTime "$cTime"); then
 	return 4
 fi
 
-currentHour=$(itemAt 1 "$time")
-currentMin=$(itemAt 2 "$time")
+cse=$(itemAt 3 "$cTime")
 
-currentDayMin=$(Time2DayMin $currentHour $currentMin)
+cdami=$(Time2Minutes "$cTime")
 
-newDayMin=$(($currentDayMin + $inc))
-
-if [ $newDayMin -lt 0 ]; then
-	newDayMin=$((1440 + $newDayMin))
+ndami=$(($cdami + $inc))
+if [ $ndami -lt 0 ]; then
+	ndami=$((1440 + $ndami))
+fi
+if [ $ndami -gt 1439 ]; then
+	ndami=$(($ndami - 1440))
 fi
 
-if [ $newDayMin -gt 1439 ]; then
-	newDayMin=$(($newDayMin - 1440))
-fi
+nTime=$(Minutes2Time $ndami)
+nhr=$(itemAt 1 "$nTime")
+nmi=$(itemAt 2 "$nTime")
 
-newTime=$(DayMin2Time $newDayMin)
-newHour=$(itemAt 1 "$newTime")
-newMin=$(itemAt 2 "$newTime")
+echo "$nhr $nmi $cse"
 
-echo "$newHour $newMin"
 return 0
 
 # Return codes
@@ -358,7 +314,6 @@ return 0
 # 2 - Increment is not integer
 # 3 - Increment is out of range
 # 4 - Invalid time
-
 }
 
 function isLeapYear() {
@@ -389,7 +344,7 @@ return 0
 # 3 - Year is LESSER THAN the MINIMUM
 }
 
-function isValidDate() {
+function isDate() {
 if [ $# -ne 1 ]; then
 	return 1
 fi
@@ -397,72 +352,42 @@ fi
 param="$1"
 
 c=$(sizeOfList "$param")
-
-if [ $c -lt 2 -o $c -gt 3 ]; then
+if [ $c -ne 3 ]; then
 	echo false
 	return 2
 fi
 
-if [ $c -eq 2 ]; then
-	y4=$(itemAt 1 "$param")
-	if ! $(isInteger $y4); then
-		return 2
-	fi
-	if [ $y4 -lt $MinimumYear ]; then
-		echo false
-		return 2
-	fi
-	
-	doy=$(echo "$(itemAt 2 "$param")" | sed 's/^0*//')
-	if ! $(isInteger $doy); then
-		return 2
-	fi
-	if $(isLeapYear $y4); then
-		doymax=366
-	else
-		doymax=365
-	fi
-	if [ $doy -lt 1 -o $doy -gt $doymax ]; then
-		echo false
-		return 2
-	fi
-	
-	echo true
-	return 0
+y4=$(itemAt 1 "$param")
+if ! $(isInteger $y4); then
+	return 2
+fi
+if [ $y4 -lt $MinimumYear ]; then
+	echo false
+	return 2
 fi
 
-if [ $c -eq 3 ]; then
-	y4=$(itemAt 1 "$param")
-	if ! $(isInteger $y4); then
-		return 2
-	fi
-	if [ $y4 -lt $MinimumYear ]; then
-		echo false
-		return 2
-	fi
-	
-	mo=$(echo "$(itemAt 2 "$param")" | sed 's/^0*//')
-	if ! $(isInteger $mo); then
-		return 2
-	fi
-	if [ $mo -lt 1 -o $mo -gt 12 ]; then
-		echo false
-		return 2
-	fi
-	
-	da=$(echo "$(itemAt 3 "$param")" | sed 's/^0*//')
-	if ! $(isInteger $da); then
-		return 2
-	fi
-	nod=$(daysInMonth $y4)
-	if [ $da -lt 1 -o $da -gt $(itemAt $mo "$nod") ]; then
-		echo false
-		return 2
-	fi
-	
-	echo true
-	return 0
+mo=$(itemAt 2 "$param")
+if ! $(isInteger $mo); then
+	return 2
 fi
+if [ $mo -lt 1 -o $mo -gt 12 ]; then
+	echo false
+	return 2
+fi
+
+da=$(itemAt 3 "$param")
+if ! $(isInteger $da); then
+	return 2
+fi
+nod=$(daysInMonth $y4)
+if [ $da -lt 1 -o $da -gt $(itemAt $mo "$nod") ]; then
+	echo false
+	return 2
+fi
+
+echo true
+
+return 0
 
 # Return codes
 # 0 - OK
@@ -470,7 +395,7 @@ fi
 # 2 - Invalid date
 }
 
-function isValidTime() {
+function isDateTime() {
 if [ $# -ne 1 ]; then
 	return 1
 fi
@@ -478,8 +403,46 @@ fi
 param="$1"
 
 c=$(sizeOfList "$param")
+if [ $c -ne 6 ]; then
+	echo false
+	return 2
+fi
 
-if [ $c -lt 2 -o $c -gt 3 ]; then
+y4=$(itemAt 1 "$param")
+mo=$(itemAt 2 "$param")
+da=$(itemAt 3 "$param")
+if ! $(isDate "$y4 $mo $da"); then
+	echo false
+	return 2
+fi
+
+hr=$(itemAt 4 "$param")
+mi=$(itemAt 5 "$param")
+se=$(itemAt 6 "$param")
+if ! $(isTime "$hr $mi $se"); then
+	echo false
+	return 2
+fi
+
+echo true
+
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+# 2 - Invalid Date/Time
+}
+
+function isTime() {
+if [ $# -ne 1 ]; then
+	return 1
+fi
+
+param="$1"
+
+c=$(sizeOfList "$param")
+if [ $c -ne 3 ]; then
 	echo false
 	return 2
 fi
@@ -487,9 +450,6 @@ fi
 hr=$(itemAt 1 "$param")
 if ! $(isInteger $hr); then
 	return 2
-fi
-if [ "$hr" != "0" ]; then
-	hr=$(echo "$(itemAt 1 "$param")" | sed 's/^0//')
 fi
 if [ $hr -lt 0 -o $hr -gt 23 ]; then
 	echo false
@@ -500,29 +460,22 @@ mi=$(itemAt 2 "$param")
 if ! $(isInteger $mi); then
 	return 2
 fi
-if [ "$mi" != "0" ]; then
-	mi=$(echo "$(itemAt 2 "$param")" | sed 's/^0//')
-fi
 if [ $mi -lt 0 -o $mi -gt 59 ]; then
 	echo false
 	return 2
 fi
 
-if [ $c -eq 3 ]; then
-	se=$(itemAt 3 "$param")
-	if ! $(isInteger $se); then
-		return 2
-	fi
-	if [ "$se" != "0" ]; then
-		se=$(echo "$(itemAt 3 "$param")" | sed 's/^0//')
-	fi
-	if [ $se -lt 0 -o $se -gt 59 ]; then
-		echo false
-		return 2
-	fi
+se=$(itemAt 3 "$param")
+if ! $(isInteger $se); then
+	return 2
+fi
+if [ $se -lt 0 -o $se -gt 59 ]; then
+	echo false
+	return 2
 fi
 
 echo true
+
 return 0
 
 # Return codes
@@ -537,7 +490,6 @@ if [ $# -ne 1 ]; then
 fi
 
 JD=$1
-
 if ! $(isFloat $JD); then
 	return 2
 fi
@@ -550,14 +502,16 @@ Y=$(echo "$Date" | cut -d " " -f 1)
 M=$(echo "$Date" | cut -d " " -f 2)
 D=$(echo "$Date" | cut -d " " -f 3)
 
-th=$(echo "$Jfrac * 24.0" | bc)
-TH=$(echo "scale=0; $th / 1" | bc)
-tm=$(echo "($th - $TH) * 60.0" | bc)
-TM=$(echo "scale=0; $tm / 1" | bc)
-ts=$(echo "($tm - $TM) * 60.0" | bc)
-TS=$(echo "scale=0; $ts / 1" | bc)
+totalSec=$(echo "scale=2; $Jfrac * 86400.0" | bc)
+totalSec=$(echo "$totalSec" | awk '{printf("%.0f", $0)}')
+
+TH=$(($totalSec / 3600))
+remainder=$(($totalSec % 3600))
+TM=$(($remainder / 60))
+TS=$(($remainder % 60))
 
 echo "$Y $M $D $TH $TM $TS"
+
 return 0
 
 # Return codes
@@ -572,7 +526,6 @@ if [ $# -ne 1 ]; then
 fi
 
 JDN=$1
-
 if ! $(isInteger $JDN); then
 	return 2
 fi
@@ -594,6 +547,7 @@ M=$(echo "(($m + 2) % 12) + 1" | bc)
 D=$(echo "$d + 1" | bc)
 
 echo "$Y $M $D"
+
 return 0
 
 # Return codes
@@ -602,15 +556,53 @@ return 0
 # 2 - Invalid Julian date
 }
 
+function Minutes2Time() {
+if [ $# -ne 1 ]; then
+	return 1
+fi
+
+Minutes=$1
+if ! $(isInteger $Minutes); then
+	return 2
+fi
+
+if [ $Minutes -lt 0 -o $Minutes -gt 1439 ]; then
+	return 3
+fi
+
+hr=$(($Minutes / 60))
+mi=$(($Minutes % 60))
+
+Time="$hr $mi 0"
+
+echo "$Time"
+
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+# 2 - DayMin is not integer
+# 3 - DayMin is out of range
+}
+
 function monthOfDOY() {
 if [ $# -ne 2 ]; then
 	return 1
 fi
 
 y4=$1
-doy=$(echo "$2" | sed 's/^0*//')
+if [ $y4 -lt $MinimumYear ]; then
+	return 2
+fi
 
-if ! $(isValidDate "$y4 $doy"); then
+doy=$2
+if $(isLeapYear $y4); then
+	MaximumDOY=366
+else
+	MaximumDOY=365
+fi
+if [ $doy -lt 1 -o $doy -gt $MaximumDOY ]; then
 	return 2
 fi
 
@@ -628,13 +620,52 @@ for i in $nod; do
 	fi
 done
 
-echo $m
+echo "$m"
+
 return 0
 
 # Return codes
 # 0 - OK
 # 1 - Not enough parameters
 # 2 - Invalid date
+}
+
+function Now() {
+if [ $# -gt 1 ]; then
+	return 1
+fi
+
+utcdate=false
+
+if [ $# -ne 0 ]; then
+	param=$1
+	case $param in
+			-u | --utc)
+				utcdate=true
+				;;
+	esac
+fi
+
+if $utcdate; then
+	DATE="date -u"
+else
+	DATE="date"
+fi
+
+y4=$($DATE +%Y)
+hr=$(echo "$($DATE +%H)" | sed 's/^0//')
+mi=$(echo "$($DATE +%M)" | sed 's/^0//')
+se=$(echo "$($DATE +%S)" | sed 's/^0//')
+mo=$(echo "$($DATE +%m)" | sed 's/^0//')
+da=$(echo "$($DATE +%d)" | sed 's/^0//')
+
+echo "$y4 $mo $da $hr $mi $se"
+
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Excessive parameters
 }
 
 function shortYear() {
@@ -651,7 +682,8 @@ if [ $y4 -lt $MinimumYear ]; then
 fi
 
 y2=$(echo $y4 | sed 's/^..//')
-echo $y2
+
+echo "$y2"
 
 return 0
 
@@ -662,28 +694,23 @@ return 0
 # 3 - Year is LESSER THAN the MININUM
 }
 
-function Time2DayMin() {
-if [ $# -ne 2 ]; then
+function Time2Minutes() {
+if [ $# -ne 1 ]; then
 	return 1
 fi
 
-hr=$1
-if [ "$hr" != "0" ]; then
-	hr=$(echo "$hr" | sed 's/^0//')
-fi
-
-mi=$2
-if [ "$mi" != "0" ]; then
-	mi=$(echo "$mi" | sed 's/^0//')
-fi
-
-if ! $(isValidTime "$hr $mi"); then
+Time="$1"
+if ! $(isTime "$Time"); then
 	return 2
 fi
 
-dami=$(($(($hr * 60)) + $mi))
+hr=$(itemAt 1 "$Time")
+mi=$(itemAt 2 "$Time")
 
-echo $dami
+Minutes=$(($(($hr * 60)) + $mi))
+
+echo "$Minutes"
+
 return 0
 
 # Return codes
