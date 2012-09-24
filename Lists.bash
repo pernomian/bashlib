@@ -30,7 +30,7 @@ fi
 
 list=($list)
 res=()
-for i in $(seq 1 1 $(($size + 1))); do
+for i in $(sequence "1-$(($size + 1))"); do
 	c=$(($i - 1))
 	if [ $i -lt $pos ]; then
 		res[$c]=${list[$c]}
@@ -200,6 +200,79 @@ return 0
 # 0 - OK
 # 1 - Not enough parameters
 # 2 - Invalid Position and/or Empty List
+}
+
+function sequence() {
+if [ $# -ne 1 ]; then
+	return 1
+fi
+
+lexp=$1
+if [ -z "$lexp" ]; then
+	return 2
+fi
+
+frag=()
+last=""
+c=1
+while true; do
+	now=$(echo "$lexp" | cut -d ";" -f $c)
+	if [ "$now" == "" ]; then
+		break
+	fi
+	
+	if [ "$now" != "$last" ]; then
+		frag[$c]="$now"
+		last="$now"
+		c=$(($c + 1))
+	else
+		break
+	fi
+done
+
+Seq=()
+c=0
+for f in ${frag[*]}; do
+	if [ -n "$(echo "$f" | grep "-")" ]; then
+		n1=$(echo "$f" | cut -d "-" -f 1)
+		if ! $(isInteger $n1); then
+			return 2
+		fi
+		
+		n2=$(echo "$f" | cut -d "-" -f 2)
+		if ! $(isInteger $n2); then
+			return 2
+		fi
+		
+		if [ $n1 -ge $n2 ]; then
+			return 2
+		fi
+		
+		v=$n1
+		while [ $v -le $n2 ]; do
+			Seq[$c]=$v
+			c=$(($c + 1))
+			v=$(($v + 1))
+		done
+	else
+		if ! $(isInteger $f); then
+			return 2
+		fi
+		
+		Seq[$c]=$f
+		c=$(($c + 1))
+	fi
+done
+
+echo "${Seq[*]}"
+
+return 0
+
+
+# Return codes
+# 0 -OK
+# 1 - Not enough parameters
+# 2 - Invalid expression
 }
 
 function sizeOfList() {

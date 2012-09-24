@@ -52,6 +52,12 @@ echo "    Position    : $pos"
 item=$(itemAt $pos "$INlist")
 echo "    Item        : $item"
 
+echo "* Function: sequence"
+lexp="1-4;7;10;15-20"
+echo "    Expression : $lexp"
+lseq=$(sequence "$lexp")
+echo "    Output     : $lseq"
+
 echo "* Function: sizeOfList"
 INlist="q w e r t y"
 echo "    Input list  : $INlist"

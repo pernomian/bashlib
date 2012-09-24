@@ -34,6 +34,7 @@ bashlib
    * ping
    * printf
    * sed
+   * seq
    * wget
 
 

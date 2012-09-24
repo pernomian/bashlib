@@ -26,7 +26,7 @@ da=$(itemAt 3 "$Date")
 
 doy=0
 nod=$(daysInMonth $y4)
-for m in $(seq 1 1 $(($mo - 1))); do
+for m in $(sequence "1-$(($mo - 1))"); do
 	doy=$(($doy + $(itemAt $m "$nod")))
 done
 doy=$(($doy + $da))
@@ -218,7 +218,7 @@ da=0
 
 r=$doy
 nod=$(daysInMonth $y4)
-for cm in $(seq 1 1 12); do
+for cm in $(sequence "1-12"); do
 	dicm=$(itemAt $cm "$nod")
 	if [ $r -gt $dicm ]; then
 		mo=$(($mo + 1))

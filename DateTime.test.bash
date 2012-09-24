@@ -123,7 +123,7 @@ dJDN=$(deltaDay "$Date1" "$Date2")
 echo "There are $dJDN days between $Date1 and $Date2"
 
 DateTime1="2012 1 1 0 0 0"
-DateTime2="2013 12 31 0 0 0"
+DateTime2="2013 12 31 23 59 59"
 dSec=$(deltaSecond "$DateTime1" "$DateTime2")
 echo "There are $dSec seconds between $DateTime1 and $DateTime2"
 
