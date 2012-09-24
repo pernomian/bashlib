@@ -2,6 +2,7 @@
 
 # Required Libraries
 . Numbers.bash
+. Output.bash
 # ---
 
 function addAt() {
@@ -213,22 +214,20 @@ if [ -z "$lexp" ]; then
 fi
 
 frag=()
-last=""
-c=1
-while true; do
-	now=$(echo "$lexp" | cut -d ";" -f $c)
-	if [ "$now" == "" ]; then
-		break
-	fi
-	
-	if [ "$now" != "$last" ]; then
+if [ -z "$(echo "$lexp" | grep ";")" ]; then
+	frag[0]="$lexp"
+else
+	c=0
+	while true; do
+		now=$(echo "$lexp" | cut -d ";" -f $(($c + 1)))
+		if [ "$now" == "" ]; then
+			break
+		fi
+		
 		frag[$c]="$now"
-		last="$now"
 		c=$(($c + 1))
-	else
-		break
-	fi
-done
+	done
+fi
 
 Seq=()
 c=0
@@ -252,6 +251,7 @@ for f in ${frag[*]}; do
 		while [ $v -le $n2 ]; do
 			Seq[$c]=$v
 			c=$(($c + 1))
+			
 			v=$(($v + 1))
 		done
 	else
@@ -282,7 +282,9 @@ fi
 
 list="$1"
 
+setSystemLanguage "C"
 size=$(echo "$list" | awk '{print NF}')
+setSystemLanguage ""
 
 echo "$size"
 
