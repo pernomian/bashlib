@@ -3,7 +3,7 @@
 # Required Libraries
 # ---
 
-function addLeadingZeros {
+function addLeadingZeros() {
 if [ $# -ne 2 ]; then
 	echo ""
 	return 1
@@ -12,10 +12,33 @@ fi
 len=$1
 num=$2
 
+setSystemLanguage "C"
 printf "%0""$len""d" $num
+setSystemLanguage ""
+
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
 }
 
-function writeLog {
+function setSystemLanguage() {
+if [ $# -ne 1 ]; then
+	return 1
+fi
+
+LC_ALL=$1
+export LC_ALL
+
+return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
+}
+
+function writeLog() {
 if [ $# -ne 3 ]; then
 	return 1
 fi
@@ -49,6 +72,12 @@ if [ -z "$text" ]; then
 fi
 
 line="$line $text\033[0m"
+
 echo -e $line >> $fpath
+
 return 0
+
+# Return codes
+# 0 - OK
+# 1 - Not enough parameters
 }

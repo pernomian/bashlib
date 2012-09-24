@@ -4,7 +4,7 @@
 . Lists.bash
 # ---
 
-function ftpRetrieve {
+function ftpRetrieve() {
 if [ $# -ne 6 ]; then
 	return 4
 fi
@@ -55,7 +55,7 @@ fi
 # 4 - WRONG parameters
 }
 
-function ftpSend {
+function ftpSend() {
 if [ $# -ne 6 ]; then
 	return 4
 fi
@@ -102,7 +102,7 @@ return 0
 # 4 - WRONG parameters
 }
 
-function httpRetrieve {
+function httpRetrieve() {
 if [ $# -ne 3 ]; then
 	return 4
 fi
@@ -147,7 +147,7 @@ fi
 # 4 - WRONG parameters
 }
 
-function isFTPServerOK {
+function isFTPServerOK() {
 if [ $# -ne 1 ]; then
 	echo false
 	return 1
@@ -178,7 +178,7 @@ return 0
 # 1 - Not enough parameters
 }
 
-function isPingOK {
+function isPingOK() {
 if [ $# -ne 1 ]; then
 	echo false
 	return 1
@@ -210,7 +210,7 @@ return 0
 # 1 - Not enough parameters
 }
 
-function listFtpFolder {
+function listFtpFolder() {
 if [ $# -ne 4 ]; then
 	echo ""
 	return 1
@@ -254,7 +254,7 @@ return 0
 # 1 - Not enough parameters
 }
 
-function listLocalFolder {
+function listLocalFolder() {
 if [ $# -ne 1 ]; then
 	echo ""
 	return 1

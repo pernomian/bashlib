@@ -24,7 +24,9 @@ fi
 
 GPSWeek=$(($dJDN / 7))
 GPSDay=$(($dJDN % 7))
+setSystemLanguage "C"
 GPSDate=$(echo "$GPSWeek $GPSDay" | awk '{printf("%04d%1d", $1, $2)}')
+setSystemLanguage ""
 
 echo "$GPSDate"
 
@@ -46,7 +48,9 @@ if ! $(isInteger $GPSDate); then
 	return 2
 fi
 
+setSystemLanguage "C"
 week=$(echo "$GPSDate" | cut -c 1-4 | awk '{printf("%d", $0)}')
+setSystemLanguage ""
 day=$(echo "$GPSDate" | cut -c 5)
 GPSdays=$(($week * 7 + $day))
 

@@ -3,6 +3,7 @@
 # Required Libraries
 . Lists.bash
 . Numbers.bash
+. Output.bash
 # ---
 
 # Initialization
@@ -91,7 +92,9 @@ se=$(itemAt 6 "$DateTime")
 JD=$(echo "scale=10; $JDN + ($hr - 12) / 24.0 + $mi / 1440.0 \
    + $se / 86400.0" | bc)
 
+setSystemLanguage "C"
 echo $(echo "$JD" | awk '{printf("%.9f", $0)}')
+setSystemLanguage ""
 
 return 0
 
@@ -178,7 +181,9 @@ JD1=$(DateTime2JD "$DateTime1")
 JD2=$(DateTime2JD "$DateTime2")
 deltaSec=$(echo "($JD2 - $JD1) * 86400.0" | bc)
 
+setSystemLanguage "C"
 echo $(echo "$deltaSec" | awk '{printf("%.0f", $0)}')
+setSystemLanguage ""
 
 return 0
 
@@ -503,7 +508,9 @@ M=$(echo "$Date" | cut -d " " -f 2)
 D=$(echo "$Date" | cut -d " " -f 3)
 
 totalSec=$(echo "scale=2; $Jfrac * 86400.0" | bc)
+setSystemLanguage "C"
 totalSec=$(echo "$totalSec" | awk '{printf("%.0f", $0)}')
+setSystemLanguage ""
 
 TH=$(($totalSec / 3600))
 remainder=$(($totalSec % 3600))
