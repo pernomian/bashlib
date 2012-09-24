@@ -42,7 +42,7 @@ echo "Time is $Time. 10 minutes ago was $previous10"
 next10=$(incrementMinute 10 "$Time")
 echo "Time is $Time. Next 10 minutes will be $next10"
 
-for Year in $(seq 2008 1 2012); do
+for Year in {2008..2012}; do
 	if $(isLeapYear $Year); then
 		echo "$Year is Leap Year"
 	else
