@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Required Libraries
+. Numbers.bash
 # ---
 
 function addLeadingZeros() {
@@ -10,7 +11,16 @@ if [ $# -ne 2 ]; then
 fi
 
 len=$1
+if ! $(isInteger $len); then
+	return 2
+fi
+if [ $len -lt 1 ]; then
+	return 2
+fi
 num=$2
+if ! $(isInteger $len); then
+	return 2
+fi
 
 setSystemLanguage "C"
 printf "%0""$len""d" $num
@@ -21,6 +31,7 @@ return 0
 # Return codes
 # 0 - OK
 # 1 - Not enough parameters
+# 2 - Invalid Length and/or Number
 }
 
 function setSystemLanguage() {
@@ -63,12 +74,16 @@ case $kind in
 		line="$line   \033[0;31m[X]"
 		;;
 	*)
-		return 1
+		return 2
 		;;
 esac
 	
 if [ -z "$text" ]; then
-	return 1
+	return 3
+fi
+
+if [ ! -f $path ]; then
+	return 4
 fi
 
 line="$line $text\033[0m"
@@ -80,4 +95,7 @@ return 0
 # Return codes
 # 0 - OK
 # 1 - Not enough parameters
+# 2 - Invalid Kind
+# 3 - Empty Message
+# 4 - File does not exist
 }
