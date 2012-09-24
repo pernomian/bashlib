@@ -34,8 +34,9 @@ bashlib
    * ping
    * printf
    * sed
-   * wget
 
+## Notes
+   The supported operating systems were tested with their default tools, i.e., it should work as is because it does not use extra tools.
 
 ## Recommendations
    After downloading "bashlib" it is recommended that you:
