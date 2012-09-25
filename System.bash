@@ -137,6 +137,7 @@ case $sys in
 		fi
 		;;
 	*)
+		info=""
 		;;
 esac
 
