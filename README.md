@@ -28,6 +28,7 @@ bashlib
    * date
    * grep
    * sed
+   * uname
 
 ## Notes
    The supported operating systems were tested with their default tools, i.e., it should work as is because it does not use extra tools.
