@@ -26,11 +26,7 @@ bashlib
    * bc
    * cut
    * date
-   * diff
-   * ftp
    * grep
-   * ping
-   * printf
    * sed
 
 ## Notes
@@ -38,11 +34,7 @@ bashlib
 
 ## Recommendations
    After downloading "bashlib" it is recommended that you:
-   - Copy the entire folder to your HOME folder;
-   - Edit all the ".bash" files:
-      - Look at the "Required libraries" section from all files;
-      - Include the absolute path of each library
-          - e.g. ". DateTime" to ". /home/USER/bashlib/DateTime"
+   - Copy the entire folder to somwhere from your HOME folder;
    - Save the files;
    - Check the permissions:
       - For libraries, 644 (-rw-r--r--)
@@ -86,4 +78,3 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
 ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.    
-
