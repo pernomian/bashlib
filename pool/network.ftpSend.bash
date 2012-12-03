@@ -3,7 +3,7 @@
 load network.isIP
 load system.isPath
 load system.isDirectory
-load system.isWritable
+load system.isReadable
 
 function ftpSend() {
 if [ $# -ne 6 ]; then
