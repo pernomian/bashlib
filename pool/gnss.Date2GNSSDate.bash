@@ -22,13 +22,13 @@ if [ $dJDN -lt 0 ]; then
 	return 2
 fi
 
-GPSWeek=$(($dJDN / 7))
-GPSDay=$(($dJDN % 7))
+GNSSWeek=$(($dJDN / 7))
+GNSSDay=$(($dJDN % 7))
 setLocale "C"
-GPSDate=$(echo "$GPSWeek $GPSDay" | awk '{printf("%04d%1d", $1, $2)}')
+GNSSDate=$(echo "$GNSSWeek $GNSSDay" | awk '{printf("%04d%1d", $1, $2)}')
 setLocale ""
 
-echo "$GPSDate"
+echo "$GNSSDate"
 
 return 0
 
