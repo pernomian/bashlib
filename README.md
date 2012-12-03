@@ -33,7 +33,9 @@ bashlib
    * bc
    * cut
    * date
+   * ftp
    * grep
+   * mktemp
    * sed
    * uname
 
