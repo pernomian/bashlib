@@ -15,7 +15,7 @@ bashlib
    In order to use "bashlib" from your script you have to source "bashlib.bash", by using "." or "source" builtin bash function, providing the right relative or absolute path.
    When you source "bashlib.bash" it provides you two functions: "load" and "unload".
    "load" allows you to use a specific function, for example, if you need "normalizeNumber" function you have to insert a line like "load numbers.normalizeNumber" before calling it. It will automatically source the corresponding function file from "pool" directory.
-   "unload" allows you the way to get rid of all bashlib functions loaded, so they bacome unavailable.
+   "unload" allows you the way to get rid of all bashlib functions loaded, so they become unavailable.
    
 
 ## Specs
