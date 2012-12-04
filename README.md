@@ -28,7 +28,7 @@ bashlib
 * Languages:
    * Shell Script (Bash)
 * Dependencies:
-   * awk (using gawk)
+   * awk
    * bash (3.2 or above)
    * bc
    * cut
@@ -38,6 +38,7 @@ bashlib
    * mktemp
    * sed
    * uname
+   * wc
 
 ## Notes
    The supported operating systems were tested with their default tools, i.e., it should work as is because it does not use extra tools.
