@@ -49,7 +49,7 @@ if [ -z "$(cat $output | grep "^250")" -o \
      return 3
 fi
 
-list=$(cat $output | grep "^[ld-]\([r-][w-][x-]\)\{3\}" | awk '{ print $9 }')
+list=$(cat $output | grep "[ld-]\([r-][w-][sx-]\)\{2\}\([r-][w-][tx-]\)\{1\}" | awk '{ print $9 }')
 
 echo "$list"
 
