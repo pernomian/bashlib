@@ -1,5 +1,6 @@
 #!/bin/bash
 
+load network.isDomain
 load network.isIP
 load system.isPath
 load system.isDirectory
@@ -21,7 +22,7 @@ if [ -z "$pwd" -a "$user" == "anonymous" ]; then
 fi
 
 addr="$3"
-if ! $(isIP "$addr"); then
+if ! $(isIP "$addr") && ! $(isDomain "$addr"); then
 	return 2
 fi
 
