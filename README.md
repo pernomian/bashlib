@@ -37,6 +37,7 @@ bashlib
    * grep
    * mktemp
    * sed
+   * tr
    * uname
    * wc
 
