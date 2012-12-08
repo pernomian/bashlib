@@ -41,11 +41,15 @@ bashlib
    * wc
 
 ## Notes
-   The supported operating systems were tested with their default tools, i.e., it should work as is because it does not use extra tools.
+   * The supported operating systems were tested with their default tools, i.e., it should work as is because it does not use extra tools.
+   * The supported Operating Systems provide "bashlib" dependencies by their default installation. While developing "bashlib", an extra care about the choice on which system default tools have been taken in order to keep system compatibility / portability between some Linux distributions and Mac OS X.
+   * If you made a custom system setup, you are advised to run "verify.bash" script before running "bashlib".
 
 ## Recommendations
    After downloading "bashlib" it is recommended that you:
    - Copy the entire folder to somewhere from your HOME folder;
+   - Change the BASHLIB_HOME variable in main script:
+      - The value is the absolute path of "bashlib" folder (/path/to/bashlib)
    - Save the files;
    - Check the permissions:
       - For libraries, 644 (-rw-r--r--)
@@ -56,7 +60,7 @@ bashlib
 
 ## Contributors
    - Paulo Pernomian - Creator - [GitHub](https://github.com/pernomian)
-   - Fernando A. Damião - Tester, System - [GitHub](https://github.com/fadamiao)
+   - Fernando A. Damião - Developer, Tester on MacOS X - [GitHub](https://github.com/fadamiao)
 
 
 License Information
@@ -88,4 +92,4 @@ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
 ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.    
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

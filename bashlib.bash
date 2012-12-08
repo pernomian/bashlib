@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASHLIB_HOME="$(dirname $(find $HOME -name bashlib.bash))"
+BASHLIB_HOME="/path/to/bashlib"
 
 function load() {
 if [ $# -ne 1 ]; then
