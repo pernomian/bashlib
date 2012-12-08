@@ -39,13 +39,6 @@ if [ $p1 -gt $p2 ]; then
 	return 2
 fi
 
-### Alternative to cut
-#~ substr=""
-#~ for i in $(seq $p1 1 $p2); do
-	#~ char=$(awk "BEGIN { FS=\"\" }; { print $\"$i\" }" <<< "$str")
-	#~ substr="$substr""$char"
-#~ done
-
 substr=$(cut -c $p1-$p2 <<< "$str")
 
 echo "$substr"
