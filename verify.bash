@@ -19,6 +19,8 @@ PROGRAMS[7]='ftp'
 PROGRAMS[8]='mktemp'
 PROGRAMS[9]='wc'
 PROGRAMS[10]='tr'
+PROGRAMS[11]='ls'
+PROGRAMS[12]='rm'
 
 if [ "$SYS" == 'Darwin' -o "$SYS" == 'Linux' ]; then
 	for PROGRAM in ${PROGRAMS[@]}; do

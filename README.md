@@ -35,8 +35,10 @@ bashlib
    * date
    * ftp
    * grep
+   * ls
    * lsb_release (Linux only, optional)
    * mktemp
+   * rm
    * sed
    * sw_vers (MacOSX only, optional)
    * tr

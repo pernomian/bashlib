@@ -53,6 +53,8 @@ fi
 rawlist=$(mktemp)
 cat $output | grep "[ld-]\([r-][w-][sx-]\)\{2\}\([r-][w-][tx-]\)\{1\}" > $rawlist
 
+rm -f $output &> /dev/null
+
 while read line; do
 	permissions=$(awk '{ print $1 }' <<< "$line")
 	typechar=$(awk 'BEGIN { FS="" } { print $1 }' <<< "$permissions")
