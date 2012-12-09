@@ -1,28 +1,28 @@
 #!/bin/bash
 
-load numbers.isInteger
-load system.setLocale
 load datetime.Date2JDN
 load datetime.JDN2Date
+load gnss.isGNSSDate
+load numbers.normalizeInteger
+load strings.substring
 
 function GNSSDate2Date() {
 if [ $# -ne 1 ]; then
 	return 1
 fi
 
-GPSDate=$1
-if ! $(isInteger $GPSDate); then
+GNSSDate="$1"
+if ! $(isGNSSDate $GNSSDate); then
 	return 2
 fi
 
-setLocale "C"
-week=$(echo "$GPSDate" | cut -c 1-4 | awk '{printf("%d", $0)}')
-setLocale ""
-day=$(echo "$GPSDate" | cut -c 5)
-GPSdays=$(($week * 7 + $day))
+week=$(normalizeInteger $(substring 1 4 "$GNSSDate"))
+
+day=$(substring 5 5 "$GNSSDate")
+GNSSdays=$(($week * 7 + $day))
 
 JDN1=$(Date2JDN "1980 1 6")
-JDN2=$(($JDN1 + $GPSdays))
+JDN2=$(($JDN1 + $GNSSdays))
 
 Date=$(JDN2Date $JDN2)
 

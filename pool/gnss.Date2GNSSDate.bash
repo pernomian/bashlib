@@ -2,7 +2,6 @@
 
 load datetime.isDate
 load datetime.Date2JDN
-load system.setLocale
 
 function Date2GNSSDate() {
 if [ $# -ne 1 ]; then
@@ -24,9 +23,8 @@ fi
 
 GNSSWeek=$(($dJDN / 7))
 GNSSDay=$(($dJDN % 7))
-setLocale "C"
-GNSSDate=$(echo "$GNSSWeek $GNSSDay" | awk '{printf("%04d%1d", $1, $2)}')
-setLocale ""
+
+GNSSDate=$(printf "%04d%1d" $GNSSWeek $GNSSDay)
 
 echo "$GNSSDate"
 
