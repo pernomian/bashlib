@@ -1,8 +1,6 @@
-#! /bin/bash
+#!/bin/bash
 
 load numbers.isInteger
-load strings.strlen
-load strings.substring
 
 function strrep() {
 if [ $# -ne 4 ]; then
